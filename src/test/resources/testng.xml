@@ -1,0 +1,42 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="BankManager UI Tests" parallel="tests" thread-count="3">
+    <listeners>
+        <listener class-name="com.simbirsoft.practicum.listeners.AllureListener"/>
+        <listener class-name="com.simbirsoft.practicum.listeners.TestRetryListener"/>
+    </listeners>
+
+    <test name="Add Customer Tests">
+        <parameter name="headless" value="false"/>
+        <classes>
+            <class name="com.simbirsoft.practicum.tests.AddCustomerTest"/>
+        </classes>
+    </test>
+
+    <test name="Delete Customer Tests">
+        <parameter name="headless" value="false"/>
+        <classes>
+            <class name="com.simbirsoft.practicum.tests.DeleteCustomerTest"/>
+        </classes>
+    </test>
+
+    <test name="Sort Customers Tests">
+        <parameter name="headless" value="false"/>
+        <classes>
+            <class name="com.simbirsoft.practicum.tests.SortCustomersTest"/>
+        </classes>
+    </test>
+
+    <test name="Parameterized Customer Tests">
+        <parameter name="headless" value="false"/>
+        <classes>
+            <class name="com.simbirsoft.practicum.tests.ParameterizedAddCustomerTest"/>
+        </classes>
+    </test>
+
+    <test name="Negative Customer Tests">
+        <parameter name="headless" value="false"/>
+        <classes>
+            <class name="com.simbirsoft.practicum.tests.NegativeAddCustomerTest"/>
+        </classes>
+    </test>
+</suite>

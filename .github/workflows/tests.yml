@@ -1,0 +1,62 @@
+name: Java CI with Maven, Allure and VPN
+
+on:
+  push:
+    branches: [ "TestUI" ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup VPN (OpenVPN)
+        uses: kota65535/github-actions-openvpn@v4
+        with:
+          config_file: ${{ secrets.OVPN_CONFIG }}
+          username: ${{ secrets.OVPN_USERNAME }}
+          password: ${{ secrets.OVPN_PASSWORD }}
+
+      - name: Verify VPN connection
+        run: |
+          echo "Checking VPN connection..."
+          curl -s ifconfig.me
+          echo ""
+          ping -c 3 8.8.8.8
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip xvfb openvpn
+
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@latest
+
+      - name: Run tests with Maven
+        run: |
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1920x1080x24 &
+          mvn clean test -B -Dheadless=true
+
+      - name: Generate Allure Report
+        run: mvn allure:report
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts
+          path: |
+            target/allure-results/
+            target/surefire-reports/
+            target/site/allure-maven-plugin/
+          retention-days: 30
