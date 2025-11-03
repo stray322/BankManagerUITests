@@ -2,7 +2,7 @@ name: Java CI with Maven, Allure and GitHub Pages
 
 on:
   push:
-    branches: [ "TestUI", "main" ]
+    branches: [ "TestUI" ]
   pull_request:
     branches: [ "TestUI" ]
   workflow_dispatch:
