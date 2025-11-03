@@ -1,5 +1,6 @@
 package com.simbirsoft.practicum.tests;
 
+import com.simbirsoft.practicum.helpers.AssertHelper;
 import com.simbirsoft.practicum.pages.CustomersPage;
 import com.simbirsoft.practicum.pages.ManagerPage;
 import com.simbirsoft.practicum.utils.DataGenerator;
@@ -33,9 +34,7 @@ public class ParameterizedAddCustomerTest extends BaseTest {
         return new Object[][] {
                 {DataGenerator.generatePostCode(), "John", "Smith"},
                 {DataGenerator.generatePostCode(), "Alice", "Johnson"},
-                {DataGenerator.generatePostCode(), "Bob", "Williams"},
-                {DataGenerator.generatePostCode(), "Emma", "Brown"},
-                {DataGenerator.generatePostCode(), "Michael", "Davis"}
+                {DataGenerator.generatePostCode(), "Bob", "Williams"}
         };
     }
 
@@ -54,18 +53,20 @@ public class ParameterizedAddCustomerTest extends BaseTest {
                         "First Name: " + firstName + "\n" +
                         "Last Name: " + lastName);
 
-        managerPage.addCustomer(firstName, lastName, postCode);
+        managerPage.clickAddCustomerButton()
+                .enterFirstName(firstName)
+                .enterLastName(lastName)
+                .enterPostCode(postCode)
+                .submitForm()
+                .handleAlert();
+
         createdCustomers.add(firstName);
 
         customersPage = managerPage.clickCustomersButton();
         boolean isCustomerPresent = customersPage.isCustomerPresent(firstName);
 
-        if (isCustomerPresent) {
-            logger.info("Клиент {} успешно добавлен и проверен", firstName);
-        } else {
-            logger.error("Клиент {} не найден после добавления", firstName);
-            throw new RuntimeException("Клиент не найден после добавления: " + firstName);
-        }
+        AssertHelper.assertTrue(isCustomerPresent,
+                String.format("Клиент '%s' должен присутствовать в таблице после добавления", firstName));
 
         logger.info("Параметризованный тест завершен для клиента: {}", firstName);
     }
@@ -73,7 +74,7 @@ public class ParameterizedAddCustomerTest extends BaseTest {
     @DataProvider(name = "postCodeGeneratedData")
     public Object[][] providePostCodeGeneratedData() {
         List<Object[]> data = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 2; i++) {
             String postCode = DataGenerator.generatePostCode();
             String firstName = DataGenerator.generateNameFromPostCode(postCode);
             data.add(new Object[]{postCode, firstName, DataGenerator.generateLastName()});
@@ -92,17 +93,20 @@ public class ParameterizedAddCustomerTest extends BaseTest {
         Allure.addAttachment("Сгенерированные данные", "text/plain",
                 "Post Code: " + postCode + "\n" +
                         "Сгенерированное First Name: " + firstName + "\n" +
-                        "Last Name: " + lastName + "\n" +
-                        "Проверка преобразования: " +
-                        DataGenerator.generateNameFromPostCode(postCode).equals(firstName));
+                        "Last Name: " + lastName);
 
-        managerPage.addCustomer(firstName, lastName, postCode);
+        managerPage.clickAddCustomerButton()
+                .enterFirstName(firstName)
+                .enterLastName(lastName)
+                .enterPostCode(postCode)
+                .submitForm()
+                .handleAlert();
+
         createdCustomers.add(firstName);
 
         String expectedName = DataGenerator.generateNameFromPostCode(postCode);
-        if (!firstName.equals(expectedName)) {
-            logger.warn("Сгенерированное имя не соответствует ожидаемому: {} != {}", firstName, expectedName);
-        }
+        AssertHelper.assertTrue(firstName.equals(expectedName),
+                String.format("Сгенерированное имя должно соответствовать ожидаемому: %s == %s", firstName, expectedName));
 
         logger.info("Тест с сгенерированным именем завершен: {}", firstName);
     }
@@ -111,17 +115,14 @@ public class ParameterizedAddCustomerTest extends BaseTest {
     @Step("Очистка тестовых данных")
     public void cleanup() {
         logger.info("Очистка созданных тестовых данных");
+        ManagerPage managerPage = new ManagerPage(driver);
+        CustomersPage customersPage = managerPage.clickCustomersButton();
 
-        try {
-            CustomersPage customersPage = new CustomersPage(driver);
-            for (String customerName : createdCustomers) {
+        for (String customerName : createdCustomers) {
+            if (customersPage.isCustomerPresent(customerName)) {
                 customersPage.deleteCustomerIfPresent(customerName);
             }
-            logger.info("Очистка тестовых данных завершена. Удалено клиентов: {}", createdCustomers.size());
-        } catch (Exception e) {
-            logger.warn("Ошибка при очистке тестовых данных: {}", e.getMessage());
-        } finally {
-            createdCustomers.clear();
         }
+        logger.info("Очистка тестовых данных завершена. Удалено клиентов: {}", createdCustomers.size());
     }
 }

@@ -37,7 +37,13 @@ public class DeleteCustomerTest extends BaseTest {
                         "First Name: " + firstName + "\n" +
                         "Last Name: " + lastName);
 
-        managerPage.addCustomer(firstName, lastName, postCode);
+        managerPage.clickAddCustomerButton()
+                .enterFirstName(firstName)
+                .enterLastName(lastName)
+                .enterPostCode(postCode)
+                .submitForm()
+                .handleAlert();
+
         logger.info("Тестовый клиент создан: {}", firstName);
     }
 
@@ -74,6 +80,7 @@ public class DeleteCustomerTest extends BaseTest {
 
         CustomersPage customersPage = new CustomersPage(driver);
         customersPage.clickCustomersButton();
+
         boolean isPresentBefore = customersPage.isCustomerPresent(firstName);
         AssertHelper.assertTrue(isPresentBefore,
                 String.format("Клиент '%s' должен существовать перед удалением", firstName));
@@ -82,14 +89,6 @@ public class DeleteCustomerTest extends BaseTest {
 
         customersPage.refreshCustomerList();
         boolean isPresentAfter = customersPage.isCustomerPresent(firstName);
-
-        if (isPresentAfter) {
-            // Если клиент все еще присутствует, пробуем удалить еще раз
-            logger.warn("Клиент все еще присутствует после удаления, пробуем еще раз...");
-            customersPage.deleteCustomerIfPresent(firstName);
-            customersPage.refreshCustomerList();
-            isPresentAfter = customersPage.isCustomerPresent(firstName);
-        }
 
         AssertHelper.assertFalse(isPresentAfter,
                 String.format("Клиент '%s' должен быть удален", firstName));
@@ -102,15 +101,11 @@ public class DeleteCustomerTest extends BaseTest {
     public void cleanup() {
         logger.info("Очистка тестовых данных");
 
-        try {
-            CustomersPage customersPage = new CustomersPage(driver);
-            customersPage.clickCustomersButton()
-                    .deleteCustomerIfPresent(firstName)
-                    .clearSearch();
+        CustomersPage customersPage = new CustomersPage(driver);
+        customersPage.clickCustomersButton()
+                .deleteCustomerIfPresent(firstName)
+                .clearSearch();
 
-            logger.info("Очистка тестовых данных завершена");
-        } catch (Exception e) {
-            logger.warn("Ошибка при очистке тестовых данных: {}", e.getMessage());
-        }
+        logger.info("Очистка тестовых данных завершена");
     }
 }

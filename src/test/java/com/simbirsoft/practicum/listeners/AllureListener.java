@@ -10,6 +10,9 @@ import org.slf4j.LoggerFactory;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 
+/**
+ * Listener для интеграции с Allure Reporting
+ */
 public class AllureListener implements ITestListener {
     private static final Logger logger = LoggerFactory.getLogger(AllureListener.class);
 
@@ -50,13 +53,8 @@ public class AllureListener implements ITestListener {
 
     @Attachment(value = "Скриншот при падении теста", type = "image/png")
     public byte[] saveScreenshot(WebDriver driver) {
-        try {
-            logger.debug("Создание скриншота для Allure отчета");
-            return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
-        } catch (Exception e) {
-            logger.error("Не удалось создать скриншот: {}", e.getMessage());
-            return new byte[0];
-        }
+        logger.debug("Создание скриншота для Allure отчета");
+        return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
     }
 
     @Attachment(value = "Логи теста", type = "text/plain")

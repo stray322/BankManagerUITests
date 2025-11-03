@@ -20,6 +20,9 @@ import org.testng.annotations.Parameters;
 import java.io.ByteArrayInputStream;
 import java.time.Duration;
 
+/**
+ * Базовый класс для всех UI тестов
+ */
 public class BaseTest {
     private static final Logger logger = LoggerFactory.getLogger(BaseTest.class);
 
@@ -48,6 +51,32 @@ public class BaseTest {
         logger.info("Страница банковского приложения успешно загружена");
     }
 
+    private void takeScreenshot() {
+        byte[] screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
+        Allure.addAttachment("Screenshot on failure", new ByteArrayInputStream(screenshot));
+        logger.info("Скриншот сохранен в Allure отчет");
+    }
+
+    private void waitForPageLoad() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait.until(webDriver ->
+                ((org.openqa.selenium.JavascriptExecutor) webDriver)
+                        .executeScript("return document.readyState").equals("complete"));
+    }
+
+    private void loginAsBankManager() {
+        By managerLoginButton = By.xpath("//button[contains(text(),'Bank Manager Login')]");
+        wait.until(ExpectedConditions.elementToBeClickable(managerLoginButton)).click();
+        logger.info("Нажата кнопка Bank Manager Login");
+
+        wait.until(ExpectedConditions.urlContains("/manager"));
+        logger.info("Успешный вход как Bank Manager. Текущий URL: {}", driver.getCurrentUrl());
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//button[contains(text(),'Add Customer')]")));
+        logger.info("Страница менеджера успешно загружена");
+    }
+
     @AfterMethod
     public void tearDown(ITestResult result) {
         if (driver != null) {
@@ -59,48 +88,6 @@ public class BaseTest {
             }
             driver.quit();
             logger.info("Браузер закрыт");
-        }
-    }
-
-    private void takeScreenshot() {
-        try {
-            byte[] screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
-            Allure.addAttachment("Screenshot on failure", new ByteArrayInputStream(screenshot));
-            logger.info("Скриншот сохранен в Allure отчет");
-        } catch (Exception e) {
-            logger.error("Не удалось сделать скриншот: {}", e.getMessage());
-        }
-    }
-
-    private void waitForPageLoad() {
-        try {
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-            wait.until(webDriver ->
-                    ((org.openqa.selenium.JavascriptExecutor) webDriver)
-                            .executeScript("return document.readyState").equals("complete"));
-        } catch (Exception e) {
-            logger.warn("Страница не полностью загружена, но продолжаем выполнение");
-        }
-    }
-
-    private void loginAsBankManager() {
-        try {
-
-            By managerLoginButton = By.xpath("//button[contains(text(),'Bank Manager Login')]");
-            wait.until(ExpectedConditions.elementToBeClickable(managerLoginButton)).click();
-            logger.info("Нажата кнопка Bank Manager Login");
-
-            wait.until(ExpectedConditions.urlContains("/manager"));
-            logger.info("Успешный вход как Bank Manager. Текущий URL: {}", driver.getCurrentUrl());
-
-            wait.until(ExpectedConditions.presenceOfElementLocated(
-                    By.xpath("//button[contains(text(),'Add Customer')]")));
-            logger.info("Страница менеджера успешно загружена");
-
-        } catch (Exception e) {
-            logger.error("Ошибка при входе как Bank Manager: {}", e.getMessage());
-            takeScreenshot();
-            throw new RuntimeException("Не удалось войти как Bank Manager", e);
         }
     }
 }

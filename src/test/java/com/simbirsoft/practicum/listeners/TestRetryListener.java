@@ -8,6 +8,9 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
+/**
+ * Listener для настройки повторного запуска тестов
+ */
 public class TestRetryListener implements IAnnotationTransformer {
     private static final Logger logger = LoggerFactory.getLogger(TestRetryListener.class);
 

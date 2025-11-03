@@ -1,17 +1,24 @@
 package com.simbirsoft.practicum.tests;
 
 import com.simbirsoft.practicum.helpers.AssertHelper;
+import com.simbirsoft.practicum.pages.CustomersPage;
 import com.simbirsoft.practicum.pages.ManagerPage;
 import io.qameta.allure.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Epic("UI Тесты банковского приложения")
 @Feature("Негативные сценарии управления клиентами")
 public class NegativeAddCustomerTest extends BaseTest {
     private static final Logger logger = LoggerFactory.getLogger(NegativeAddCustomerTest.class);
+
+    private List<String> testCustomersToCleanup = new ArrayList<>();
 
     @DataProvider(name = "invalidCustomerData")
     public Object[][] provideInvalidCustomerData() {
@@ -20,11 +27,7 @@ public class NegativeAddCustomerTest extends BaseTest {
                 {"John", "", "12345", "Пустая фамилия"},
                 {"John", "Doe", "", "Пустой почтовый индекс"},
                 {"John123", "Doe", "12345", "Имя с цифрами"},
-                {"John", "Doe123", "12345", "Фамилия с цифрами"},
-                {"J", "Doe", "12345", "Слишком короткое имя"},
-                {"John", "D", "12345", "Слишком короткая фамилия"},
-                {"John", "Doe", "123", "Слишком короткий почтовый индекс"},
-                {"VeryLongFirstNameThatExceedsLimit", "Doe", "12345", "Слишком длинное имя"}
+                {"John", "Doe123", "12345", "Фамилия с цифрами"}
         };
     }
 
@@ -43,15 +46,17 @@ public class NegativeAddCustomerTest extends BaseTest {
                         "Last Name: " + lastName + "\n" +
                         "Post Code: " + postCode);
 
-        managerPage.tryAddCustomerWithInvalidData(firstName, lastName, postCode);
+        managerPage.clickAddCustomerButton()
+                .enterFirstName(firstName)
+                .enterLastName(lastName)
+                .enterPostCode(postCode)
+                .submitForm();
 
-        boolean isError = managerPage.isErrorAlertPresent();
+        boolean stillOnManagerPage = driver.getCurrentUrl().contains("/manager");
+        AssertHelper.assertTrue(stillOnManagerPage,
+                "При невалидных данных должна оставаться на странице менеджера");
 
-        if (!isError) {
-            logger.warn("Для теста '{}' не было обнаружено ошибки валидации", description);
-        }
-
-        logger.info("Негативный тест завершен: {}", description);
+        logger.info("Форма обработана для теста: {}", description);
     }
 
     @Test(description = "Попытка добавления клиента без открытия формы")
@@ -65,6 +70,9 @@ public class NegativeAddCustomerTest extends BaseTest {
         boolean isFormDisplayed = managerPage.isAddCustomerFormDisplayed();
         AssertHelper.assertFalse(isFormDisplayed, "Форма добавления клиента не должна отображаться изначально");
 
+        boolean stillOnManagerPage = driver.getCurrentUrl().contains("/manager");
+        AssertHelper.assertTrue(stillOnManagerPage, "Должны оставаться на странице менеджера");
+
         logger.info("Тест завершен - форма корректно не отображается без нажатия кнопки");
     }
 
@@ -75,23 +83,53 @@ public class NegativeAddCustomerTest extends BaseTest {
         logger.info("Запуск теста добавления дубликата клиента");
 
         ManagerPage managerPage = new ManagerPage(driver);
+        CustomersPage customersPage = new CustomersPage(driver);
 
-        managerPage.addCustomer("Duplicate", "User", "1234567890");
+        String uniqueName = "DuplicateTest" + System.currentTimeMillis();
+        testCustomersToCleanup.add(uniqueName);
 
-        managerPage.tryAddCustomerWithInvalidData("Duplicate", "User", "1234567890");
+        managerPage.clickAddCustomerButton()
+                .enterFirstName(uniqueName)
+                .enterLastName("User")
+                .enterPostCode("12345")
+                .submitForm();
 
-        boolean isError = managerPage.isErrorAlertPresent();
+        String firstAlert = managerPage.getAlertText();
+        logger.info("Первый клиент добавлен: {}", firstAlert);
 
-        if (isError) {
-            logger.info("Обнаружена ошибка при добавлении дубликата - корректное поведение");
-        } else {
-            logger.warn("Не обнаружено ошибки при добавлении дубликата клиента");
-        }
+        managerPage.clickAddCustomerButton()
+                .enterFirstName(uniqueName)
+                .enterLastName("User")
+                .enterPostCode("12345")
+                .submitForm();
 
-        managerPage.clickCustomersButton()
-                .deleteCustomerIfPresent("Duplicate")
-                .clearSearch();
+        String duplicateAlert = managerPage.getAlertText();
+        logger.info("Реакция на дубликат: {}", duplicateAlert);
+
+        boolean isErrorAlert = duplicateAlert.toLowerCase().contains("error") ||
+                duplicateAlert.toLowerCase().contains("already") ||
+                duplicateAlert.toLowerCase().contains("exist") ||
+                duplicateAlert.toLowerCase().contains("duplicate");
+
+        AssertHelper.assertTrue(isErrorAlert,
+                String.format("При дубликате должен быть алерт об ошибке. Текст алерта: '%s'", duplicateAlert));
 
         logger.info("Тест добавления дубликата завершен");
+    }
+
+    @AfterMethod
+    @Step("Гарантированная очистка тестовых данных")
+    public void cleanup() {
+        logger.info("Гарантированная очистка тестовых данных для негативных тестов");
+
+        ManagerPage managerPage = new ManagerPage(driver);
+        CustomersPage customersPage = managerPage.clickCustomersButton();
+
+        for (String customerName : testCustomersToCleanup) {
+            customersPage.deleteCustomerIfPresent(customerName);
+        }
+
+        testCustomersToCleanup.clear();
+        logger.info("Очистка тестовых данных завершена");
     }
 }

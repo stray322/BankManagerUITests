@@ -6,6 +6,9 @@ import org.testng.Assert;
 
 import java.util.List;
 
+/**
+ * Вспомогательный класс для утверждений с логированием
+ */
 public class AssertHelper {
     private static final Logger logger = LoggerFactory.getLogger(AssertHelper.class);
 
@@ -15,7 +18,7 @@ public class AssertHelper {
     /**
      * Проверяет равенство двух списков строк с логированием
      */
-    public static void assertEquals(List<String> actual, List<String> expected, String message) {
+    public static void assertListsEquals(List<String> actual, List<String> expected, String message) {
         logger.debug("Проверка равенства списков. Ожидаемый: {}, Фактический: {}", expected, actual);
         Assert.assertEquals(actual, expected, message);
         logger.info("Проверка пройдена: {}", message);
@@ -24,7 +27,7 @@ public class AssertHelper {
     /**
      * Проверяет равенство двух целых чисел с логированием
      */
-    public static void assertEquals(int actual, int expected, String message) {
+    public static void assertNumbersEquals(int actual, int expected, String message) {
         logger.debug("Проверка равенства чисел. Ожидаемый: {}, Фактический: {}", expected, actual);
         Assert.assertEquals(actual, expected, message);
         logger.info("Проверка пройдена: {}", message);

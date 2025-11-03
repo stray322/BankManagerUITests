@@ -7,6 +7,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+/**
+ * Класс ТОЛЬКО для чтения конфигурационных параметров
+ * Не содержит логики настройки
+ */
 public class ConfigReader {
     private static final Logger logger = LoggerFactory.getLogger(ConfigReader.class);
     private static final Properties properties = new Properties();
@@ -38,6 +42,19 @@ public class ConfigReader {
         properties.setProperty("browser.incognito", "false");
     }
 
+    /**
+     * Создает объект конфигурации на основе properties
+     */
+    public static TestConfig createTestConfig() {
+        return new TestConfig(
+                getProperty("base.url"),
+                getProperty("browser", "chrome"),
+                getTimeout(),
+                isHeadless(),
+                isIncognito()
+        );
+    }
+
     public static String getProperty(String key) {
         return getProperty(key, null);
     }
@@ -62,6 +79,10 @@ public class ConfigReader {
 
     public static boolean isHeadless() {
         return Boolean.parseBoolean(getProperty("headless", "false"));
+    }
+
+    public static boolean isIncognito() {
+        return Boolean.parseBoolean(getProperty("browser.incognito", "false"));
     }
 
     public static String getBrowser() {

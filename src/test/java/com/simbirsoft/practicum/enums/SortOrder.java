@@ -2,6 +2,9 @@ package com.simbirsoft.practicum.enums;
 
 import java.util.Comparator;
 
+/**
+ * Перечисление для порядка сортировки
+ */
 public enum SortOrder {
     ASCENDING(Comparator.naturalOrder(), "По возрастанию"),
     DESCENDING(Comparator.reverseOrder(), "По убыванию");

@@ -5,6 +5,9 @@ import org.testng.ITestResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Анализатор для повторного запуска упавших тестов
+ */
 public class TestRetryAnalyzer implements IRetryAnalyzer {
     private static final Logger logger = LoggerFactory.getLogger(TestRetryAnalyzer.class);
     private int retryCount = 0;

@@ -9,6 +9,9 @@ import java.util.TreeMap;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 
+/**
+ * Вспомогательный класс для математических операций
+ */
 public class MathHelper {
     private static final Logger logger = LoggerFactory.getLogger(MathHelper.class);
 
@@ -29,7 +32,7 @@ public class MathHelper {
         double average = items.stream()
                 .mapToDouble(mapper)
                 .average()
-                .orElseThrow();
+                .orElseThrow(() -> new AssertionError("Не удалось вычислить среднее значение для пустого списка"));
 
         logger.debug("Среднее значение: {}", average);
         return average;
@@ -73,7 +76,7 @@ public class MathHelper {
         double averageLength = strings.stream()
                 .mapToInt(String::length)
                 .average()
-                .orElseThrow();
+                .orElseThrow(() -> new AssertionError("Не удалось вычислить среднюю длину строк"));
 
         logger.debug("Средняя длина строк: {}", averageLength);
         return averageLength;

@@ -1,35 +1,41 @@
 package com.simbirsoft.practicum.utils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import io.qameta.allure.Step;
 import java.security.SecureRandom;
 
+/**
+ * Утилитарный класс для генерации тестовых данных
+ */
 public class DataGenerator {
-    private static final Logger logger = LoggerFactory.getLogger(DataGenerator.class);
     private static final SecureRandom random = new SecureRandom();
 
     /**
      * Генерирует случайный 10-значный Post Code
+     *
+     * @return 10-значный числовой Post Code
      */
+    @Step("Генерация 10-значного Post Code")
     public static String generatePostCode() {
         StringBuilder postCode = new StringBuilder();
         for (int i = 0; i < 10; i++) {
             postCode.append(random.nextInt(10));
         }
-        String result = postCode.toString();
-        logger.debug("Сгенерирован Post Code: {}", result);
-        return result;
+        return postCode.toString();
     }
 
     /**
-     * Преобразует Post Code в имя по заданным правилам
+     * Преобразует 10-значный Post Code в имя по алгоритму:
+     * - Post Code разбивается на 5 двузначных чисел
+     * - Каждое число преобразуется в букву английского алфавита (0-25 = a-z)
+     * - Если число больше 25, используется modulo 26
+     *
+     * @param postCode 10-значный числовой код
+     * @return сгенерированное имя
+     * @throws IllegalArgumentException если Post Code некорректен
      */
+    @Step("Преобразование Post Code {postCode} в имя по алгоритму")
     public static String generateNameFromPostCode(String postCode) {
-        logger.debug("Преобразование Post Code в имя: {}", postCode);
-
         if (postCode == null || postCode.length() != 10 || !postCode.matches("\\d{10}")) {
-            logger.error("Некорректный Post Code: {}", postCode);
             throw new IllegalArgumentException("Post Code должен содержать ровно 10 цифр");
         }
 
@@ -39,34 +45,33 @@ public class DataGenerator {
             int num = Integer.parseInt(pair);
             char letter = (char) ('a' + (num % 26));
             name.append(letter);
-            logger.trace("Пара цифр {} -> буква {}", pair, letter);
         }
 
-        String result = name.toString();
-        logger.debug("Сгенерировано имя: {} из Post Code: {}", result, postCode);
-        return result;
+        return name.toString();
     }
 
     /**
      * Генерирует случайную фамилию
+     *
+     * @return сгенерированная фамилия
      */
+    @Step("Генерация случайной фамилии")
     public static String generateLastName() {
-        String lastName = "User" + random.nextInt(10000);
-        logger.debug("Сгенерирована фамилия: {}", lastName);
-        return lastName;
+        return "User" + random.nextInt(10000);
     }
 
     /**
      * Генерирует полный набор тестовых данных
+     *
+     * @return объект TestData с полным набором данных
      */
+    @Step("Генерация полного набора тестовых данных")
     public static TestData generateTestData() {
         String postCode = generatePostCode();
         String firstName = generateNameFromPostCode(postCode);
         String lastName = generateLastName();
 
-        TestData testData = new TestData(postCode, firstName, lastName);
-        logger.info("Сгенерирован полный набор тестовых данных: {}", testData);
-        return testData;
+        return new TestData(postCode, firstName, lastName);
     }
 
     /**
