@@ -2,8 +2,9 @@ name: Java CI with Maven and Allure
 
 on:
   push:
-    branches: [ "TestUI" ]
+    branches: [ "TestUI", "main" ]
   pull_request:
+    branches: [ "TestUI" ]
 
 jobs:
   test:
